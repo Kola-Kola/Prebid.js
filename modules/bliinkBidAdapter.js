@@ -138,7 +138,11 @@ export const isXMLFormat = (content) => {
 export const buildBid = (bidRequest, bliinkCreative) => {
   if (!bidRequest && !bliinkCreative) return null
 
-  const body = {
+  const isVideo = bidRequest.mediaTypes[VIDEO]
+
+  const contextVideo = isVideo && isVideo.context
+
+  let body = {
     requestId: bidRequest.bidId,
     cpm: bliinkCreative.price,
     creativeId: bliinkCreative.id,
@@ -147,6 +151,12 @@ export const buildBid = (bidRequest, bliinkCreative) => {
     width: 1,
     height: 1,
     ttl: 3600,
+  }
+
+  if (contextVideo === 'outstream') {
+    body = Object.assign(body, {
+      renderer: bliinkCreative.content
+    })
   }
 
   // eslint-disable-next-line no-mixed-operators
@@ -316,12 +326,12 @@ const getUserSyncs = (syncOptions, serverResponses, gdprConsent) => {
 }
 
 /**
- * @type {{interpretResponse: interpretResponse, code: string, aliases: string[], getUserSyncs: getUserSyncs, buildRequests: buildRequests, onTimeout: onTimeout, onSetTargeting: onSetTargeting, isBidRequestValid: isBidRequestValid, onBidWon: onBidWon}}
+ * @type {{supportedMediaTypes: (string)[], interpretResponse: ((function(*=, *): ([]|{cpm, netRevenue: boolean, ad: string, requestId, width: number, currency: string, mediaType: string, vastXml, ttl: number, creativeId, height: number}|null))|*), code: string, aliases: string[], getUserSyncs: ((function(*, *, *=): ({type: string, url: string}[]|*[]))|*), buildRequests: ((function(*, *=): ({method: string, url: string}|null))|*), isBidRequestValid: (function(*=): boolean)}}
  */
 export const spec = {
   code: BIDDER_CODE,
   aliases: aliasBidderCode,
-  supportedMediaTypes: supportedMediaTypes,
+  supportedMediaTypes,
   isBidRequestValid,
   buildRequests,
   interpretResponse,
